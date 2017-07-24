@@ -28,7 +28,7 @@
        var person = prompt("Please enter your name", "Harry Potter");	
        var room = prompt("What room do you want to enter?", "Room1");
 
-        var socket = io('http://127.0.0.1:3000', { query: {username: person, room: room }}
+        var socket = io({ query: {username: person, room: room }}
 	);
     	
 
