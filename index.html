@@ -4,10 +4,20 @@
     <title>Socket.IO chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #body { font: 13px Helvetica, Arial; }
+      #form1 { background: #ddd; padding: 3px; position: fixed; bottom: 0px; width: 100%; }
+      #form2 { background: #ddd; padding: 3px; position: fixed; bottom: 36px; width: 100%; }
+      #m2_text { border: 0; padding: 10px; width: 62%; margin-right: .5%; }
+      #m2_dest { border: 0; padding: 10px; width: 20%; margin-right: .5%; }
+      
+      #form1 input { border: 0; padding: 10px; width: 80%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; float: right;
+    		margin-right: 5px;}
+      #form2 button {
+    		float: right;
+    		margin-right: 5px;
+	  }
+      .whisper { color: #6d6}
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
@@ -15,10 +25,14 @@
     </style>
   </head>
   <body>
-    Chat example<br/>
+    Chat example, sessionID is: <span id='sessionId'></span><input type="button" value='reconnect' id='reconnect'></button><br/>
     <ul id="messages"></ul>
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
+    <form id="form1" action="">
+      To everyone : <input id="m1" autocomplete="off" /><button>Send</button>
+    </form>
+ 
+    <form id="form2" action="">
+      To: <input id="m2_dest" autocomplete="off" /> Text: <input id="m2_text" autocomplete="off" /><button>Send</button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -28,28 +42,48 @@
        var person = prompt("Please enter your name", "Harry Potter");	
        var room = prompt("What room do you want to enter?", "Room1");
 
-        var socket = io({ query: {username: person, room: room }}
-	);
-    	
+        var socket = io({ query: {username: person, room: room }});
 
-	$('form').submit(function(){
+    $('#reconnect').click(function(){
+        socket.disconnect();
+    	socket = io({ query: {username: person, room: room }});
+    	setupSocketListeners(socket);
+    });
+	$('#form1').submit(function(){
               msg = {};
 	      msg.user=person;
-              msg.text=$('#m').val();
+              msg.text=$('#m1').val();
 	      socket.emit('chat message', msg);
-	      $('#m').val('');
+	      $('#m1').val('');
 	      return false;
 	}); // submit
 
+$('#form2').submit(function(){
+              msg = {};
+	      msg.user=person;
+	      msg.dest=$('#m2_dest').val();
+	      msg.text=$('#m2_text').val();
+	      socket.emit('private message', msg);
+	      $('#m2_text').val('');
+	      return false;
+	}); // submit
+
+
+	function setupSocketListeners(socket){
     	socket.on('chat message', function(msg){
     	  $('#messages').append($('<li>').text(msg.user + " :: " + msg.text));
     	});
 
+     	socket.on('private message', function(msg){
+    	  $('#messages').append($('<li class="whisper">').text(msg.user + " (whispering): " + msg.text));
+    	});
+
         socket.on('login message', function(msg){
-          $('#messages').append($('<li class="login">').text(msg));
+          $('#messages').append($('<li class="login">').text(msg.text));
+          $('#sessionId').html(msg.sessionId)
         });
-
-
+      }
+setupSocketListeners(socket);
 
 	  }); // function
 </script>

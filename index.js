@@ -1,10 +1,19 @@
-var app = require('express')();
+var express = require('express');
+app = express()
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
+app.use('/scripts', express.static(__dirname + '/node_modules/'));
+app.use('/gyros', express.static(__dirname + '/node_modules/gyronorm/'));
 
 app.get('/', function(req, res){
        res.sendFile(__dirname + "/index.html");
 });
+app.get('/gyro', function(req, res){
+       res.sendFile(__dirname + "/gyro.html");
+});
+
+
 
 app.sessionToUser = {};
 
@@ -19,6 +28,13 @@ io.on('connection', function(socket){
 
   socket.join(room)
 
+  console.log("New socket is " + socket.id);
+  socket.send(socket.id);
+  msg = {}
+  msg.text="Welcome to chat"
+  msg.sessionId = socket.id
+  io.to(socket.id).emit('login message', msg);
+
   io.to(room).emit('login message',userId + ' connected' );
   io.to(socket.id).emit('chat message', lastMessage)
  
@@ -32,13 +48,17 @@ io.on('connection', function(socket){
 
 
   });
-
  
   socket.on('disconnect', function(){
       console.log(userId + ' disconnected');
       io.to(room).emit('login message',userId + ' left  --- ' );
   });
 
+
+socket.on('private message', function(msg){
+    lastMessage = msg;
+    io.to(msg.dest).emit('private message', msg );
+});
 
   socket.on('chat message', function(msg){
     lastMessage = msg;
