@@ -3,7 +3,9 @@ app = express()
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.use('/scripts', express.static(__dirname + '/node_modules/'));
+app.use('/scripts', express.static(__dirname + '/scripts/'));
+
+app.use('/css', express.static(__dirname + '/css/'));
 app.use('/gyros', express.static(__dirname + '/node_modules/gyronorm/'));
 
 app.get('/', function(req, res){
